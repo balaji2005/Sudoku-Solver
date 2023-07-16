@@ -344,7 +344,7 @@ while(not grid.solved() and noChangeCount <= 10):
             noChange = False
             noChangeCount = 0
 
-    for number in range(9):
+    for number in range(1, 10):
         for group in groups:
             cells_with_number_as_choice = group.cellsWithChoice(number)
             if len(cells_with_number_as_choice) == 1:
