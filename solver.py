@@ -19,22 +19,25 @@ class Sentence:
 class Grid():
 
     def __init__(self):
-        self.grid = [[0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
- 
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+        self.grid = [
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
 
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-                     [0, 0, 0,   0, 0, 0,   0, 0, 0]]
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0],
+                        [0, 0, 0,   0, 0, 0,   0, 0, 0]
+                    ]
         
     def enter(self, node, number):
         self.grid[node[0]][node[1]] = number
+        print(f'Entering {number} to {node}')
 
-    # Make it better
+    # Made it better
     def __str__(self) -> str:
         ret = '___________________\n'
         for i in range(9):
@@ -66,11 +69,21 @@ def compare(i, j, knowledge, grid, nothingToCompare):
     if len(knowledge[i].nodes.intersection(knowledge[j].nodes)) == len(knowledge[i].numbers.intersection(knowledge[j].numbers)) and len(knowledge[i].nodes.intersection(knowledge[j].nodes)) > 0:
         sentence = Sentence(knowledge[i].nodes.intersection(knowledge[j].nodes), knowledge[i].numbers.intersection(knowledge[j].numbers))
         knowledge.append(sentence)
+        print()
+        print('Comparing ', knowledge[i], ' and ', knowledge[j])
+        print('Editing sentence ', knowledge[i], ' to', sep=' ')
         knowledge[i] = Sentence(knowledge[i].nodes - sentence.nodes,  knowledge[i].numbers - sentence.numbers)
+        print(knowledge[i])
+        print('Editing sentence ', knowledge[j], ' to', sep=' ')
+        print('Intersection: ', sentence)
         knowledge[j] = Sentence(knowledge[j].nodes - sentence.nodes,  knowledge[j].numbers - sentence.numbers)
+        print(knowledge[j])
+        nothingToCompare = False
 
         if (len(knowledge[j].nodes) == 1):
             # print('Deleted1')
+            print(knowledge[j])
+            print('Entering from compare j')
             grid.enter(list(knowledge[j].nodes)[0], list(knowledge[j].numbers)[0])
             updateNode(knowledge, list(knowledge[j].nodes)[0], list(knowledge[j].numbers)[0])
             del knowledge[j]
@@ -80,6 +93,8 @@ def compare(i, j, knowledge, grid, nothingToCompare):
             # for sentence in knowledge:
             #     print(sentence)
             # print(knowledge[i])
+            print(knowledge[i])
+            print('Entering from compare i')
             grid.enter(list(knowledge[i].nodes)[0], list(knowledge[i].numbers)[0])
             updateNode(knowledge, list(knowledge[i].nodes)[0], list(knowledge[i].numbers)[0])
             del knowledge[i]
@@ -88,7 +103,6 @@ def compare(i, j, knowledge, grid, nothingToCompare):
             del knowledge[j]
         if (len(knowledge[i].nodes) == 0):
             del knowledge[i]
-        nothingToCompare = False
 
 def updateKnowledge(knowledge, grid):
     gr = []
@@ -109,18 +123,30 @@ def updateNode(knowledge, node, number):
 # Starting the Player
 grid = Grid()
 
+# grid.grid = [
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
+#     [0, 0, 0,   0, 0, 0,   0, 0, 0]
+# ]
+
 grid.grid = [
-    [1, 2, 9,   0, 8, 3,   4, 0, 7],
-    [6, 0, 0,   0, 1, 5,   0, 0, 0],
-    [0, 7, 5,   0, 2, 4,   6, 1, 8],
-
-    [4, 9, 0,   0, 0, 0,   0, 7, 6],
-    [0, 3, 7,   0, 4, 0,   0, 0, 0],
-    [0, 0, 0,   1, 0, 0,   3, 0, 0],
-
-    [0, 0, 0,   2, 6, 0,   7, 0, 5],
-    [9, 0, 0,   0, 7, 0,   0, 0, 0],
-    [0, 0, 2,   4, 0, 0,   0, 3, 1]
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
+    list(map(int, input().split())),
 ]
 
 print(grid)
@@ -250,24 +276,36 @@ updateKnowledge(knowledge, grid)
 
 # print(checkKnowledge(knowledge))
 
-# for sentence in knowledge:
-#     print(sentence)
+for sentence in knowledge:
+    print(sentence)
 
 nothingToCompare = False
 
-while (not grid.solved()):
+count = 0
+
+while (not grid.solved() and count <= 10):
+    nothingToCompare = True
     for i in range(len(knowledge)):
         # print(grid)
         if i < len(knowledge):
             if len(knowledge[i].nodes) == 1:
+                print('Entering from for loop')
+                nothingToCompare = False
                 grid.enter(list(knowledge[i].nodes)[0], list(knowledge[i].numbers)[0])
                 updateNode(knowledge, list(knowledge[i].nodes)[0], list(knowledge[i].numbers)[0])
                 del knowledge[i]
-                continue
-            for j in range(len(knowledge)):
-                if i > j and i < len(knowledge):
-                    compare(j, i, knowledge, grid, nothingToCompare)
-                elif j > i and j < len(knowledge):
-                    compare(i, j, knowledge, grid, nothingToCompare)
+            else:
+                for j in range(len(knowledge)):
+                    if j < len(knowledge):
+                        if i > j:
+                            compare(j, i, knowledge, grid, nothingToCompare)
+                        elif j > i:
+                            compare(i, j, knowledge, grid, nothingToCompare)
+
+    if nothingToCompare:
+        count += 1
 
 print(grid)
+
+for sentence in knowledge:
+    print(sentence)
