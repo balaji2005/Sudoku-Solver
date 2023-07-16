@@ -349,4 +349,8 @@ while(not grid.solved() and noChangeCount <= 10):
     if noChange:
         noChangeCount += 1
 
-print(grid)
+if (not grid.solved()):
+    print('I couldn\'t solve it completely!😔😞')
+    print(grid)
+else:
+    print(grid)
