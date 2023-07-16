@@ -107,6 +107,13 @@ class Group:
         if number in self.filledNumbers:
             return True
         return False
+    
+    def cellsWithChoice(self, number):
+        ret = []
+        for cell in self.cells:
+            if number in cell.choices:
+                ret.append(cell)
+        return ret
 
 def updateCells(grid, cells):
     for i in range(9):
@@ -336,6 +343,15 @@ while(not grid.solved() and noChangeCount <= 10):
             cell.fill(cell.choices[0])
             noChange = False
             noChangeCount = 0
+
+    for number in range(9):
+        for group in groups:
+            cells_with_number_as_choice = group.cellsWithChoice(number)
+            if len(cells_with_number_as_choice) == 1:
+                cells_with_number_as_choice[0].fill(number)
+                noChange = False
+                noChangeCount = 0
+
     for number in range(9):
         for group in groups:
             if not group.isFilled(number):
@@ -350,7 +366,10 @@ while(not grid.solved() and noChangeCount <= 10):
         noChangeCount += 1
 
 if (not grid.solved()):
+    print()
     print('I couldn\'t solve it completely!😔😞')
     print(grid)
+    for cell in cells:
+        print(cell)
 else:
     print(grid)
