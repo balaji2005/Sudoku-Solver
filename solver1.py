@@ -412,6 +412,7 @@ attempt(grid, noChange, noChangeCount)
 noChange = True
 noChangeCount = 0
 if not grid.solved():
+    print(grid)
     print('Guessing...')
     trial(grid, noChange, noChangeCount)
 
