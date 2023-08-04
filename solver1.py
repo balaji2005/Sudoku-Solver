@@ -1,5 +1,7 @@
 import copy
 
+EMPTY = ' '
+
 class Grid:
 
     def __init__(self):
@@ -190,11 +192,32 @@ class Grid:
             self.group26,
             self.group27
         ]
+
+    # Updates the grid to the input
+    def update(self):
+        i = 0
+        while i < len(self.cells):
+            x = self.cells[i]
+            if grid.grid[x.coord[0]][x.coord[1]] != 0:
+                self.cells.remove(x)
+                for group in self.groups:
+                    if cell in group.cells:
+                        group.cells.remove(cell)
+                i -= 1
+            i += 1
+        i = 0
+
+        while i < len(self.groups):
+            x = self.groups[i]
+            if len(x.cells) == 0:
+                self.groups.remove(x)
         
+    # Updates the number of the grid when the AI tries to fill it
     def updateGrid(self, cell):
         node = (cell.coord[0], cell.coord[1])
         number = cell.number
         self.grid[node[0]][node[1]] = number
+        print(self, node[0], self.grid, sep = " ")
         print(f'Entering {number} to {node}')
 
     # Made it better
@@ -202,24 +225,146 @@ class Grid:
         ret = '___________________\n'
         for i in range(9):
             for j in range(9):
-                # if grid.grid[i][j]:
-                ret += str(grid.grid[i][j]) + ' '
-                # else:
-                #     ret += ' ' + ' '
+                if grid.grid[i][j]:
+                    ret += str(grid.grid[i][j]) + '|'
+                else:
+                    ret += EMPTY + '|'
                 if j in {2, 5}:
                     ret += ' '
             ret+='\n'
-            if i in {2, 5}:
-                ret += '\n'
+            # if i in {2, 5}:
+            #     ret += '\n'
         ret += '___________________\n'
         return ret
     
+    # Checks whether the grid is completely filled
     def solved(self):
         for i in range(9):
             for j in grid.grid[i]:
                 if j == 0:
                     return False
         return True
+    
+    # Gives a version of the puzzle that can be inputted into the code again
+    def reattemptable(self) -> str:
+        ret = '___________________\n'
+        for i in range(9):
+            for j in range(9):
+                ret += str(grid.grid[i][j]) + ' '
+            ret+='\n'
+        ret += '___________________\n'
+        return ret
+
+    # Gives the Sudoku an attempt
+    def attempt(self):
+        noChangeCount = 0
+        noChange = True
+        print('attempting')
+        while((not self.solved()) and noChangeCount <= 10):
+            noChange = True
+            i = 0
+            print('printing')
+            while i < len(self.cells):
+                cell = self.cells[i]
+                # print(cell)
+                if len(cell.choices) == 1:
+                    cell.fill(self, cell.choices[0])
+                    i -= 1
+                    noChange = False
+                    noChangeCount = 0
+                i += 1
+            
+            # for cell in self.cells:
+            #     print(cell)
+
+            for number in range(1, 10):
+                for group in self.groups:
+                    if len(group.cells) == 0:
+                        continue
+                    cells_with_number_as_choice = group.cellsWithChoice(number)
+                    if len(cells_with_number_as_choice) == 1:
+                        # print(cells_with_number_as_choice[0])
+                        cells_with_number_as_choice[0].fill(grid, number)
+                        noChange = False
+                        noChangeCount = 0
+            
+            # for cell in self.cells:
+            #     print(cell)
+            
+            for number in range(1, 10):
+                for group in self.groups:
+                    if len(group.cells) == 0:
+                        continue
+                    if not group.isFilled(number):
+                        if len(group.cells) == 0:
+                            continue
+                        for group1 in self.groups:
+                            if len(group1.cells) == 0:
+                                continue
+                            if set(group.cellsWithChoice(number)) <= set(group1.cells):
+                                for cell in set(group1.cells) - set(group.cellsWithChoice(number)):
+                                    if len(cell.choices) == 0:
+                                        continue
+                                    if number in cell.choices:
+                                        cell.choices.remove(number)
+                                        noChange = False
+                                        noChangeCount = 0
+            if noChange:
+                noChangeCount += 1
+            print(self.solved(), noChange,  noChangeCount, sep = " ")
+    
+    # Gives the Sudoku a try with a guess
+    def trial(self):
+        list_of_no_of_choices = []
+        print("trial")
+        print(self)
+        for cell in self.cells:
+            print(cell.choices)
+            list_of_no_of_choices.append(len(cell.choices))
+        m = 10
+        for e in list_of_no_of_choices:
+            if e == 0:
+                continue
+            if e < m:
+                m = e
+        print(list_of_no_of_choices, m, sep = " ")
+        cell = self.cells[list_of_no_of_choices.index(m)]
+        print(cell)
+        for choice in cell.choices:
+            grid1 = self.deepcopy()
+            # grid1 = self
+            # cells1 = cellsdeepcopy(cells)
+            # groups1 = groupsdeepcopy(groups)
+            print('trial....')
+            print(grid1, self, sep = " ")
+            try:
+                # print('Guessing...')
+                cell.fill(grid1, choice)
+                grid1.attempt()
+                print('is solved')
+                print(grid.solved())
+                if not grid1.solved():
+                    print(grid1)
+                    # for cell in grid1.cells:
+                        # print(cell.choices)
+                    print('trailing...')
+                    grid1.trial()
+                self = copy.copy(grid1)
+                break
+            except:
+                continue
+
+    # Tries to make a deepcopy of this object
+    def deepcopy(self):
+        grid = Grid()
+        grid.grid = self.grid
+        grid.update()
+        for i in range(len(grid.cells)):
+            grid.cells[i].number = self.cells[i].number
+            grid.cells[i].choices = self.cells[i].choices
+        for cell in grid.cells:
+            print(cell.choices, cell.number, sep = " ")
+        return grid
 
 class Cell:
     def __init__(self, i, j):
@@ -230,28 +375,38 @@ class Cell:
     def __str__(self):
         return str(self.coord) + ' = ' + str(self.choices)
     
+    # Clears the choice 
     def clear_choice(self, number):
         self.choices.remove(number)
 
+    # Fills the cell with a number
     def fill(self, grid, number):
         if number in self.choices:
             self.choices = []
             self.number = number
             grid.updateGrid(self)
+            print('updating...')
+            # print(grid)
             for group in grid.groups:
                 if self in group.cells:
                     group.removeCell(self)
                     for cell in group.cells:
+                        if len(cell.choices) == 0:
+                            continue
                         if number in cell.choices:
                             cell.clear_choice(number)
+            # print(grid)
             grid.cells.remove(self)
         else:
             raise Exception('')
     
+    # Updates the number in a cell according to the input
     def updateNumber(self, number):
         self.choices = []
         self.number = number
         for group in grid.groups:
+            if len(group.cells) == 0:
+                continue
             if self in group.cells:
                 group.removeCell(self)
                 for cell in group.cells:
@@ -268,6 +423,7 @@ class Group:
     def __str__(self):
         return self.type + ' containing ' + self.cells
     
+    # Removes a cell from the group
     def removeCell(self, cell):
         self.cells.remove(cell)
         self.filledNumbers.append(cell.number)
@@ -275,18 +431,13 @@ class Group:
             if cell.number in otherCell.choices:
                 otherCell.choices.remove(cell.number)
 
-    def getCells(self, number):
-        ret = []
-        for cell in self.cells:
-            if number in cell.choices:
-                ret.append(cell)
-        return ret
-
+    # Checks whether a number is already filled in the group
     def isFilled(self, number):
         if number in self.filledNumbers:
             return True
         return False
     
+    # List of cells with a number as choice
     def cellsWithChoice(self, number):
         ret = []
         for cell in self.cells:
@@ -302,18 +453,7 @@ def updateCells(grid):
                 for cell in grid.cells:
                     if cell.coord == (i, j):
                         cell.updateNumber(number)
-                
-# def cellsdeepcopy(cells):
-#     cells1 = []
-#     for cell in cells:
-#         cells1.append(copy.deepcopy(cell))
-#     return cells1
 
-# def groupsdeepcopy(cells):
-#     groups1 = []
-#     for cell in groups:
-#         groups1.append(copy.deepcopy(cell))
-#     return groups1
 # Starting the Player
 grid = Grid()
 
@@ -345,83 +485,19 @@ grid.grid = [
 
 print(grid)
 
-noChangeCount = 0
-noChange = True
-
-def attempt(grid,noChange, noChangeCount):
-    while(not grid.solved() and noChangeCount <= 10):
-        noChange = True
-        for cell in grid.cells:
-            print(cell)
-            if len(cell.choices) == 1:
-                cell.fill(grid, cell.choices[0])
-                noChange = False
-                noChangeCount = 0
-
-        for number in range(1, 10):
-            for group in grid.groups:
-                cells_with_number_as_choice = group.cellsWithChoice(number)
-                if len(cells_with_number_as_choice) == 1:
-                    cells_with_number_as_choice[0].fill(grid, number)
-                    noChange = False
-                    noChangeCount = 0
-
-        for number in range(1, 10):
-            for group in grid.groups:
-                if not group.isFilled(number):
-                    for group1 in grid.groups:
-                        if set(group.getCells(number)) <= set(group1.cells):
-                            for cell in set(group1.cells) - set(group.getCells(number)):
-                                if number in cell.choices:
-                                    cell.choices.remove(number)
-                                    noChange = False
-                                    noChangeCount = 0
-        if noChange:
-            noChangeCount += 1
-        for group in grid.groups:
-            if len(group.cells) == 0:
-                grid.groups.remove(group)
-
-def trial(grid, noChange, noChangeCount):
-    list_of_no_of_choices = []
-    for cell in grid.cells:
-        list_of_no_of_choices.append(len(cell.choices))
-    cell = grid.cells[list_of_no_of_choices.index(max(list_of_no_of_choices))]
-    for choice in cell.choices:
-        grid1 = Grid()
-        grid1 = copy.deepcopy(grid)
-        # cells1 = cellsdeepcopy(cells)
-        # groups1 = groupsdeepcopy(groups)
-        try:
-            cell.fill(grid1, choice)
-            attempt(grid1, noChange, noChangeCount)
-            if not grid.solved():
-                print('Guessing...')
-                noChange = True
-                noChangeCount = 0
-                trial(grid1, noChange, noChangeCount)
-            grid = grid1
-            break
-        except:
-            continue
-
 updateCells(grid)
 
-attempt(grid, noChange, noChangeCount)
+grid.attempt()
 
-noChange = True
-noChangeCount = 0
-if not grid.solved():
-    print(grid)
-    print('Guessing...')
-    trial(grid, noChange, noChangeCount)
-
+for cell in grid.cells:
+    print(cell)
 
 if (not grid.solved()):
     print()
     print('I couldn\'t solve it completely!😔😞')
     print(grid)
-    for cell in grid.cells:
-        print(cell)
+    print(grid.reattemptable())
+    # for cell in grid.cells:
+    #     print(cell)
 else:
     print(grid)
