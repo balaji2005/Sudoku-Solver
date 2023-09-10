@@ -198,7 +198,7 @@ class Grid:
         i = 0
         while i < len(self.cells):
             x = self.cells[i]
-            if grid.grid[x.coord[0]][x.coord[1]] != 0:
+            if self.grid[x.coord[0]][x.coord[1]] != 0:
                 self.cells.remove(x)
                 for group in self.groups:
                     if cell in group.cells:
@@ -226,14 +226,14 @@ class Grid:
         for i in range(9):
             for j in range(9):
                 if grid.grid[i][j]:
-                    ret += str(grid.grid[i][j]) + '|'
+                    ret += str(grid.grid[i][j]) + ' '
                 else:
-                    ret += EMPTY + '|'
+                    ret += EMPTY + ' '
                 if j in {2, 5}:
                     ret += ' '
             ret+='\n'
-            # if i in {2, 5}:
-            #     ret += '\n'
+            if i in {2, 5}:
+                ret += '\n'
         ret += '___________________\n'
         return ret
     

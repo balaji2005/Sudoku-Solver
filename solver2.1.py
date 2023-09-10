@@ -2,8 +2,9 @@ import copy
 
 EMPTY = ' '
 
-class Grid:
+class Grid():
 
+    # Our workspace
     grid = [
         [0, 0, 0,   0, 0, 0,   0, 0, 0],
         [0, 0, 0,   0, 0, 0,   0, 0, 0],
@@ -18,7 +19,8 @@ class Grid:
         [0, 0, 0,   0, 0, 0,   0, 0, 0]
     ]
 
-    cells = {
+    # Choices
+    choices = {
         "cell00": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
         "cell01": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
         "cell02": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -102,6 +104,7 @@ class Grid:
         "cell88": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     }
 
+    # The Groups
     groups = [
         # Rows
         [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)],
@@ -137,21 +140,13 @@ class Grid:
         [(6, 6), (7, 6), (8, 6), (6, 7), (7, 7), (8, 7), (6, 8), (7, 8), (8, 8)]
     ]
 
-    # Updates the number of the grid when the AI tries to fill it
-    # def updateGrid(self, cell):
-    #     node = (cell.coord[0], cell.coord[1])
-    #     number = cell.number
-    #     self.grid[node[0]][node[1]] = number
-    #     print(self, node[0], self.grid, sep = " ")
-    #     print(f'Entering {number} to {node}')
-
     # Make it better
     def __str__(self) -> str:
         ret = '___________________\n'
         for i in range(9):
             for j in range(9):
-                if grid.grid[i][j]:
-                    ret += str(grid.grid[i][j]) + '|'
+                if self.grid[i][j]:
+                    ret += str(self.grid[i][j]) + '|'
                 else:
                     ret += EMPTY + '|'
                 if j in {2, 5}:
@@ -165,7 +160,7 @@ class Grid:
     # Checks whether the grid is completely filled
     def solved(self):
         for i in range(9):
-            for j in grid.grid[i]:
+            for j in self.grid[i]:
                 if j == 0:
                     return False
         return True
@@ -179,65 +174,88 @@ class Grid:
             ret+='\n'
         ret += '___________________\n'
         return ret
+        
+    def fill(self, i, j, number):
+        if number in self.choices[f'cell{i}{j}']:
+            self.choices[f'cell{i}{j}'] = []
+            self.grid[i][j] = number
 
-    # Clears a choice for a cell
-    def clear_choice(self, i, j, number):
-        if number in self.cells[f'cell{i}{j}']:
-            self.cells[f'cell{i}{j}'].remove(number)
-        else:
-            raise Exception('No CHOICE')
-    
-    # Fills the cell with a number
-    def fill(self, grid, number):
-        if number in self.choices:
-            self.choices = []
-            self.number = number
-            grid.updateGrid(self)
-            print('updating...')    
-            # print(grid)
-            for group in grid.groups:
-                if self in group.cells:
-                    group.removeCell(self)
-                    for cell in group.cells:
-                        if len(cell.choices) == 0:
-                            continue
-                        if number in cell.choices:
-                            cell.clear_choice(number)
-            # print(grid)
-            grid.cells.remove(self)
+            cell = (i, j)
+            for group in self.groups:
+                if cell in group:
+                    group.remove(cell)
+                    for cell1 in group:
+                        choices = self.choices[f'cell{cell1[0]}{cell1[1]}']
+                        if len(choices) != 0 and number in choices:
+                            choices.remove(number)
+            self.choices.pop(f'cell{cell[0]}{cell[1]}')
         else:
             raise Exception('Wrong NUMBER')
     
-    # Gives the Sudoku an attempt
+    def updateCell(self, i, j, number):
+        self.choices[f'cell{i}{j}'] = []
+        for group in self.groups:
+            if len(group) != 0 and (i, j) in group:
+                group.remove((i, j))
+                for cell in group:
+                    choices = self.choices[f'cell{cell[0]}{cell[1]}']
+                    if len(choices) != 0 and number in choices:
+                        choices.remove(number)
+        self.choices.pop(f'cell{i}{j}')
+     
+    def update(self):
+        for i in range(9):
+            for j in range(9):
+                if self.grid[i][j] != 0:
+                    number = self.grid[i][j]
+                    self.updateCell(i, j, number)
+
+    def cellsWithChoice(self, group, number):
+        cellsWithChoice = []
+
+        for cell in group:
+            try:
+                if number in self.choices[f'cell{cell[0]}{cell[1]}']:
+                    cellsWithChoice.append(cell)
+            except:
+                continue
+        return cellsWithChoice
+    
+    def isFilled(self, group, number):
+        for cell in group:
+            if self.grid[cell[0]][cell[1]] == number:
+                return True
+        return False
+
     def attempt(self):
         noChangeCount = 0
         noChange = True
-        print('attempting')
+
         while((not self.solved()) and noChangeCount <= 10):
             noChange = True
             i = 0
-            print('printing')
-            while i < len(self.cells):
-                cell = self.cells[i]
-                # print(cell)
-                if len(cell.choices) == 1:
-                    cell.fill(self, cell.choices[0])
-                    i -= 1
-                    noChange = False
-                    noChangeCount = 0
-                i += 1
-            
+            for i in range(9):
+                for j in range(9):
+                    try:
+                        if len(self.choices[f'cell{i}{j}']) != 0:
+                            if len(self.choices[f'cell{i}{j}']) == 1:
+                                self.fill(i, j, self.choices[f'cell{i}{j}'][0])
+                                noChange = False
+                                noChangeCount = 0
+                    except:
+                        continue
+                
             # for cell in self.cells:
             #     print(cell)
 
             for number in range(1, 10):
                 for group in self.groups:
-                    if len(group.cells) == 0:
+                    if len(group) == 0:
                         continue
-                    cells_with_number_as_choice = group.cellsWithChoice(number)
+                    cells_with_number_as_choice = self.cellsWithChoice(group, number)
                     if len(cells_with_number_as_choice) == 1:
                         # print(cells_with_number_as_choice[0])
-                        cells_with_number_as_choice[0].fill(grid, number)
+                        self.fill(cells_with_number_as_choice[0][0], cells_with_number_as_choice[0][1], number)
                         noChange = False
                         noChangeCount = 0
             
@@ -246,141 +264,82 @@ class Grid:
             
             for number in range(1, 10):
                 for group in self.groups:
-                    if len(group.cells) == 0:
+                    if len(group) == 0:
                         continue
-                    if not group.isFilled(number):
-                        if len(group.cells) == 0:
+                    if not self.isFilled(group, number):
+                        if len(group) == 0:
                             continue
                         for group1 in self.groups:
-                            if len(group1.cells) == 0:
+                            if len(group1) == 0:
                                 continue
-                            if set(group.cellsWithChoice(number)) <= set(group1.cells):
-                                for cell in set(group1.cells) - set(group.cellsWithChoice(number)):
-                                    if len(cell.choices) == 0:
+                            if set(self.cellsWithChoice(group, number)) <= set(group1):
+                                for cell in set(group1) - set(self.cellsWithChoice(group, number)):
+                                    if len(self.choices[f'cell{cell[0]}{cell[1]}']) == 0:
                                         continue
-                                    if number in cell.choices:
-                                        cell.choices.remove(number)
+                                    if number in self.choices[f'cell{cell[0]}{cell[1]}']:
+                                        self.choices[f'cell{cell[0]}{cell[1]}'].remove(number)
                                         noChange = False
                                         noChangeCount = 0
             if noChange:
                 noChangeCount += 1
             print(self.solved(), noChange,  noChangeCount, sep = " ")
-    
-    # Gives the Sudoku a try with a guess
-    def trial(self):
-        list_of_no_of_choices = []
-        print("trial")
+
+    def possibleChildren(self):
         print(self)
-        for cell in self.cells:
-            print(cell.choices)
-            list_of_no_of_choices.append(len(cell.choices))
-        m = 10
-        for e in list_of_no_of_choices:
-            if e == 0:
-                continue
-            if e < m:
-                m = e
-        print(list_of_no_of_choices, m, sep = " ")
-        cell = self.cells[list_of_no_of_choices.index(m)]
-        print(cell)
-        for choice in cell.choices:
-            grid1 = self.deepcopy()
-            # grid1 = self
-            # cells1 = cellsdeepcopy(cells)
-            # groups1 = groupsdeepcopy(groups)
-            print('trial....')
-            print(grid1, self, sep = " ")
-            try:
-                # print('Guessing...')
-                cell.fill(grid1, choice)
-                grid1.attempt()
-                print('is solved')
-                print(grid.solved())
-                if not grid1.solved():
-                    print(grid1)
-                    # for cell in grid1.cells:
-                        # print(cell.choices)
-                    print('trailing...')
-                    grid1.trial()
-                self = copy.copy(grid1)
+        print(self.choices)
+        for h in range(1, 10):
+            x = []
+            for i in range(9):
+                for j in range(9):
+                    try:
+                        if len(self.choices[f'cell{i}{j}']) == h:
+                            x.append((i, j))
+                    except:
+                        continue
+            if len(x) != 0:
                 break
-            except:
-                continue
-    
+        
+        cell = x[0]
+        returning_list = []
 
-class Cell:
-    
-    # Updates the number in a cell according to the input
-    def updateNumber(self, number):
-        self.choices = []
-        self.number = number
-        for group in grid.groups:
-            if len(group.cells) == 0:
-                continue
-            if self in group.cells:
-                group.removeCell(self)
-                for cell in group.cells:
-                    if number in cell.choices:
-                        cell.clear_choice(number)
-        grid.cells.remove(self)
-    
-class Group:
-    def __init__(self, type, cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9):
-        self.type = type
-        self.cells = [cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9]
-        self.filledNumbers = []
+        for i in self.choices[f'cell{cell[0]}{cell[1]}']:
+            grid = Grid()
+            grid = self
+            grid.grid[cell[0]][cell[1]] = i
+            grid.update()
+            returning_list.append(grid)
 
-    def __str__(self):
-        return self.type + ' containing ' + self.cells
-    
-    # Removes a cell from the group
-    def removeCell(self, cell):
-        self.cells.remove(cell)
-        self.filledNumbers.append(cell.number)
-        for otherCell in self.cells:
-            if cell.number in otherCell.choices:
-                otherCell.choices.remove(cell.number)
+        return returning_list
 
-    # Checks whether a number is already filled in the group
-    def isFilled(self, number):
-        if number in self.filledNumbers:
-            return True
-        return False
+class Stack():
+
+    stack = []
+
+    def add(self, nodes):
+        for node in nodes:
+            self.stack.append(node)
     
-    # List of cells with a number as choice
-    def cellsWithChoice(self, number):
-        ret = []
-        for cell in self.cells:
-            if number in cell.choices:
-                ret.append(cell)
+    def len(self):
+        return len(self.stack)
+
+    def pop(self):
+        ret = self.stack[self.len() - 1]
+        self.stack.pop(self.len() - 1)
         return ret
-
-# Updates the grid for the given puzzle
-def updateCells(grid):
-    for i in range(9):
-        for j in range(9):
-            if grid.grid[i][j] != 0:
-                number = grid.grid[i][j]
-                for cell in grid.cells:
-                    if cell.coord == (i, j):
-                        cell.updateNumber(number)
-
-# Starting the Player
+    
+    def solve(self):
+        node = self.pop()
+        if node.solved():
+            return node.state
+        node.attempt()
+        children = node.possibleChildren()
+        adding_list = []
+        for child in children:
+            adding_list.append(child)
+        self.add(adding_list)
+        self.solve()
+   
 grid = Grid()
-
-# grid.grid = [
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0],
-#     [0, 0, 0,   0, 0, 0,   0, 0, 0]
-# ]
 
 grid.grid = [
     list(map(int, input().split())),
@@ -396,24 +355,23 @@ grid.grid = [
 
 print(grid)
 
-updateCells(grid)
-
+grid.update()
 grid.attempt()
-
-for cell in grid.cells:
-    print(cell)
-
-# if not grid.solved():
-#     print(grid)
-#     # print('Guessing...')
-#     grid.trial()
+print(grid.choices)
 
 if (not grid.solved()):
+
+    stack = Stack()
+
+    print(grid.choices)
+
+    stack.add([grid])
+
+    stack.solve()
+
     print()
     print('I couldn\'t solve it completely!😔😞')
     print(grid)
     print(grid.reattemptable())
-    # for cell in grid.cells:
-    #     print(cell)
 else:
     print(grid)
