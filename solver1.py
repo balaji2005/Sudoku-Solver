@@ -217,8 +217,8 @@ class Grid:
         node = (cell.coord[0], cell.coord[1])
         number = cell.number
         self.grid[node[0]][node[1]] = number
-        print(self, node[0], self.grid, sep = " ")
-        print(f'Entering {number} to {node}')
+        # print(self, node[0], self.grid, sep = " ")
+        # print(f'Entering {number} to {node}')
 
     # Made it better
     def __str__(self) -> str:
@@ -259,11 +259,11 @@ class Grid:
     def attempt(self):
         noChangeCount = 0
         noChange = True
-        print('attempting')
+        # print('attempting')
         while((not self.solved()) and noChangeCount <= 10):
             noChange = True
             i = 0
-            print('printing')
+            # print('printing')
             while i < len(self.cells):
                 cell = self.cells[i]
                 # print(cell)
@@ -311,15 +311,15 @@ class Grid:
                                         noChangeCount = 0
             if noChange:
                 noChangeCount += 1
-            print(self.solved(), noChange,  noChangeCount, sep = " ")
+            # print(self.solved(), noChange,  noChangeCount, sep = " ")
     
     # Gives the Sudoku a try with a guess
     def trial(self):
         list_of_no_of_choices = []
-        print("trial")
-        print(self)
+        # print("trial")
+        # print(self)
         for cell in self.cells:
-            print(cell.choices)
+            # print(cell.choices)
             list_of_no_of_choices.append(len(cell.choices))
         m = 10
         for e in list_of_no_of_choices:
@@ -327,16 +327,16 @@ class Grid:
                 continue
             if e < m:
                 m = e
-        print(list_of_no_of_choices, m, sep = " ")
+        # print(list_of_no_of_choices, m, sep = " ")
         cell = self.cells[list_of_no_of_choices.index(m)]
-        print(cell)
+        # print(cell)
         for choice in cell.choices:
             grid1 = self.deepcopy()
             # grid1 = self
             # cells1 = cellsdeepcopy(cells)
             # groups1 = groupsdeepcopy(groups)
-            print('trial....')
-            print(grid1, self, sep = " ")
+            # print('trial....')
+            # print(grid1, self, sep = " ")
             try:
                 # print('Guessing...')
                 cell.fill(grid1, choice)
@@ -347,7 +347,7 @@ class Grid:
                     print(grid1)
                     # for cell in grid1.cells:
                         # print(cell.choices)
-                    print('trailing...')
+                    # print('trailing...')
                     grid1.trial()
                 self = copy.copy(grid1)
                 break
@@ -362,8 +362,8 @@ class Grid:
         for i in range(len(grid.cells)):
             grid.cells[i].number = self.cells[i].number
             grid.cells[i].choices = self.cells[i].choices
-        for cell in grid.cells:
-            print(cell.choices, cell.number, sep = " ")
+        # for cell in grid.cells:
+            # print(cell.choices, cell.number, sep = " ")
         return grid
 
 class Cell:
@@ -385,7 +385,7 @@ class Cell:
             self.choices = []
             self.number = number
             grid.updateGrid(self)
-            print('updating...')
+            # print('updating...')
             # print(grid)
             for group in grid.groups:
                 if self in group.cells:
@@ -489,8 +489,8 @@ updateCells(grid)
 
 grid.attempt()
 
-for cell in grid.cells:
-    print(cell)
+# for cell in grid.cells:
+    # print(cell)
 
 if (not grid.solved()):
     print()
